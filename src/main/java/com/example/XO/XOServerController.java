@@ -1,23 +1,20 @@
 package com.example.XO;
 
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.control.ToggleButton;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 
+import java.io.*;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
 
-public class XOController implements Initializable {
+public class XOServerController implements Initializable {
     @FXML
     private Label menu;
     @FXML
@@ -52,6 +49,7 @@ public class XOController implements Initializable {
     private Button button9;
     private int playerTurn = 0;
     ArrayList<Button> buttons;
+    ServerThread serverThread = new ServerThread(this);
 
     public void checkIfGameOver() {
         String line = "";
@@ -83,15 +81,17 @@ public class XOController implements Initializable {
             }
             else {
                 if (playerTurn==9) {
-                    statusLabel.setText("Draw!");
-                    startButton.setText("RESTART");
-                    for (Button button : buttons) {
-                        button.setDisable(true);
+                        if (line.equals("OOO")) {
+                            statusLabel.setText("Opponent won!");
+                            startButton.setText("RESTART");
+                            for (Button button : buttons) {
+                                button.setDisable(true);
+                            }
+                        }
                     }
                 }
             }
         }
-    }
     public void setPlayerSymbol(Button button) {
         if (playerTurn % 2 == 0) {
             button.setText("X");
@@ -125,11 +125,16 @@ public class XOController implements Initializable {
         buttons.add(button8);
         buttons.add(button9);
         startButton.setOnMouseClicked(mouseEvent -> {
+            if(!portTextField.getText().isEmpty() && !nameTextField.getText().isEmpty()) {
+                serverThread.setQuery(1);
+                serverThread.start();
+            }
             for (Button button:buttons) {
                 button.setFocusTraversable(false);
                 setupButton(button);
             }
             if (startButton.getText().equals("RESTART")) {
+                startButton.setText("START");
                 statusLabel.setText("");
                 playerTurn = 0;
                 for (Button button : buttons) {
@@ -137,6 +142,7 @@ public class XOController implements Initializable {
                 }
            }
         });
+
     }
 //    public void restartGame() {
 //        startButton.setOnMouseClicked(mouseEvent -> {
@@ -150,6 +156,7 @@ public class XOController implements Initializable {
 //    }
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+
         startGame();
     }
 }
